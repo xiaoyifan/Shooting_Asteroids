@@ -1,13 +1,9 @@
 package game.view;
 
 import java.awt.*;
-import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.CopyOnWriteArrayList;
-import javax.imageio.*;
-import java.io.File;
-
-import javax.swing.*;
 
 
 import controller.Game;
@@ -15,8 +11,10 @@ import game.model.CommandCenter;
 import game.model.Falcon;
 import game.model.Movable;
 
+import javax.imageio.ImageIO;
 
- public class GamePanel extends Panel {
+
+public class GamePanel extends Panel {
 	
 	// ==============================================================
 	// FIELDS 
@@ -63,27 +61,60 @@ import game.model.Movable;
 		g.setColor(Color.yellow);
 		g.setFont(fnt);
 
-        String scoreStr = "";
+        String scoreStr1 = "";
 		if (CommandCenter.getScore() != 0 ) {
-            scoreStr = "SCORE :  " + CommandCenter.getScore();
+            scoreStr1 = "SCORE1 :  " + CommandCenter.getScore();
 			//g.drawString("SCORE :  " + CommandCenter.getScore(), nFontWidth, nFontHeight);
 
 		} else {
-            scoreStr = "NO SCORE";
+            scoreStr1 = "NO SCORE1";
 			//g.drawString("NO SCORE", nFontWidth, nFontHeight);
 		}
 
-        String shieldStr = "";
+        String scoreStr2 = "";
+        if (CommandCenter.getScore2() != 0 ) {
+            scoreStr2 = "SCORE2 :  " + CommandCenter.getScore2();
+            //g.drawString("SCORE :  " + CommandCenter.getScore(), nFontWidth, nFontHeight);
 
-        if (CommandCenter.getFalcon() != null)
+        } else {
+            scoreStr2 = "NO SCORE2";
+            //g.drawString("NO SCORE", nFontWidth, nFontHeight);
+        }
+
+
+        String shieldStr1 = "";
+
+        if (CommandCenter.getFalcon1() != null)
         {
-            shieldStr = "SHIELD: "+CommandCenter.getFalcon().getShield();
+            shieldStr1 = "SHIELD1: "+CommandCenter.getFalcon1().getShield();
         }
         else{
-            shieldStr = "NO SHIELD";
+            shieldStr1 = "NO SHIELD1";
         }
 
-        g.drawString(scoreStr+" \n"+shieldStr , nFontWidth, nFontHeight);
+        String shieldStr2 = "";
+
+        if (CommandCenter.getFalcon2() != null)
+        {
+            shieldStr2 = "SHIELD2: "+CommandCenter.getFalcon2().getShield();
+        }
+        else{
+            shieldStr2 = "NO SHIELD2";
+        }
+
+
+        String levelStr = "";
+        if (CommandCenter.getLevel()!=0)
+        {
+            levelStr = "LEVEL: "+ CommandCenter.getLevel();
+        }
+        else{
+            levelStr = "NO LEVEL";
+        }
+
+
+
+        g.drawString(scoreStr1+" \n"+shieldStr1+ " \n"+ scoreStr2+" \n"+shieldStr2+ " \n"+ levelStr , nFontWidth, nFontHeight);
 
 	}
 
@@ -100,8 +131,21 @@ import game.model.Movable;
 		// Fill in background with dark gray.
 		grpOff.setColor(Color.darkGray);
 
-		grpOff.fillRect(0, 0, Game.DIM.width, Game.DIM.height);
+        String Path = "src/background.jpg";
 
+        if (CommandCenter.isPlaying() == false) {
+            try {
+                myImage = ImageIO.read(new File(Path));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            grpOff.drawImage(myImage, 0, 0, Game.DIM.width, Game.DIM.height, Color.black, null);
+        }
+        else {
+
+            grpOff.fillRect(0, 0, Game.DIM.width, Game.DIM.height);
+
+        }
 		drawScore(grpOff);
 
 		
@@ -126,7 +170,10 @@ import game.model.Movable;
 			           CommandCenter.movFriends);
 			
 			
-			drawNumberShipsLeft(grpOff);
+			drawNumberShipsLeft1(grpOff);
+            if (CommandCenter.getFalcon2()!=null) {
+                drawNumberShipsLeft2(grpOff);
+            }
 			if (CommandCenter.isGameOver()) {
 				CommandCenter.setPlaying(false);
 				//bPlaying = false;
@@ -155,12 +202,12 @@ import game.model.Movable;
 	
 
 	// Draw the number of falcons left on the bottom-right of the screen. 
-	private void drawNumberShipsLeft(Graphics g) {
+	private void drawNumberShipsLeft1(Graphics g) {
         Graphics2D g2d = (Graphics2D)g;
         g2d.setStroke(new BasicStroke(1.0f));
-		Falcon fal = CommandCenter.getFalcon();
-		double[] dLens = fal.getLengths();
-		int nLen = fal.getDegrees().length;
+		Falcon fal1 = CommandCenter.getFalcon1();
+		double[] dLens = fal1.getLengths();
+		int nLen = fal1.getDegrees().length;
 		Point[] pntMs = new Point[nLen];
 		int[] nXs = new int[nLen];
 		int[] nYs = new int[nLen];
@@ -168,24 +215,56 @@ import game.model.Movable;
 		//convert to cartesean points
 		for (int nC = 0; nC < nLen; nC++) {
 			pntMs[nC] = new Point((int) (10 * dLens[nC] * Math.sin(Math
-					.toRadians(90) + fal.getDegrees()[nC])),
+					.toRadians(90) + fal1.getDegrees()[nC])),
 					(int) (10 * dLens[nC] * Math.cos(Math.toRadians(90)
-							+ fal.getDegrees()[nC])));
+							+ fal1.getDegrees()[nC])));
 		}
 		
 		//set the color to white
 		g.setColor(Color.white);
 		//for each falcon left (not including the one that is playing)
-		for (int nD = 1; nD < CommandCenter.getNumFalcons(); nD++) {
+		for (int nD = 1; nD < CommandCenter.getNumFalcons1(); nD++) {
 			//create x and y values for the objects to the bottom right using cartesean points again
-			for (int nC = 0; nC < fal.getDegrees().length; nC++) {
+			for (int nC = 0; nC < fal1.getDegrees().length; nC++) {
 				nXs[nC] = pntMs[nC].x + Game.DIM.width - (20 * nD);
-				nYs[nC] = pntMs[nC].y + Game.DIM.height - 40;
+				nYs[nC] = pntMs[nC].y + Game.DIM.height - 80;
 			}
 			g.drawPolygon(nXs, nYs, nLen);
 		}
         g2d.setStroke(new BasicStroke(2.0f));
 	}
+
+     private void drawNumberShipsLeft2(Graphics g) {
+         Graphics2D g2d = (Graphics2D)g;
+         g2d.setStroke(new BasicStroke(1.0f));
+         Falcon fal2 = CommandCenter.getFalcon2();
+         double[] dLens = fal2.getLengths();
+         int nLen = fal2.getDegrees().length;
+         Point[] pntMs = new Point[nLen];
+         int[] nXs = new int[nLen];
+         int[] nYs = new int[nLen];
+
+         //convert to cartesean points
+         for (int nC = 0; nC < nLen; nC++) {
+             pntMs[nC] = new Point((int) (10 * dLens[nC] * Math.sin(Math
+                     .toRadians(90) + fal2.getDegrees()[nC])),
+                     (int) (10 * dLens[nC] * Math.cos(Math.toRadians(90)
+                             + fal2.getDegrees()[nC])));
+         }
+
+         //set the color to white
+         g.setColor(Color.yellow);
+         //for each falcon left (not including the one that is playing)
+         for (int nD = 1; nD < CommandCenter.getNumFalcons2(); nD++) {
+             //create x and y values for the objects to the bottom right using cartesean points again
+             for (int nC = 0; nC < fal2.getDegrees().length; nC++) {
+                 nXs[nC] = pntMs[nC].x + Game.DIM.width - (20 * nD);
+                 nYs[nC] = pntMs[nC].y + Game.DIM.height - 40;
+             }
+             g.drawPolygon(nXs, nYs, nLen);
+         }
+         g2d.setStroke(new BasicStroke(2.0f));
+     }
 	
 	private void initView() {
 		Graphics g = getGraphics();			// get the graphics context for the panel
@@ -199,48 +278,64 @@ import game.model.Movable;
 	// This method draws some text to the middle of the screen before/after a game
 	private void displayTextOnScreen() {
 
-		strDisplay = "GAME OVER";
+		strDisplay = "GAME IS GOING TO START";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4);
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5);
 
-		strDisplay = "use the arrow keys to turn and thrust";
+		strDisplay = "PLAYER1 use the arrow keys to turn and thrust";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
 						+ nFontHeight + 40);
 
-		strDisplay = "use the space bar to fire";
-		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-						+ nFontHeight + 80);
+        strDisplay = "PLAYER2 use the W,S,A,D keys to turn and thrust";
+        grpOff.drawString(strDisplay,
+                (Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+                        + nFontHeight + 80);
 
-		strDisplay = "'S' to Start";
+		strDisplay = "PLAYER1 use the space bar to fire";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
 						+ nFontHeight + 120);
+
+        strDisplay = "PLAYER2 use T key to fire";
+        grpOff.drawString(strDisplay,
+                (Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+                        + nFontHeight + 160);
+
+		strDisplay = "'B' to Start";
+		grpOff.drawString(strDisplay,
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+						+ nFontHeight + 200);
 
 		strDisplay = "'P' to Pause";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-						+ nFontHeight + 160);
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+						+ nFontHeight + 240);
 
 		strDisplay = "'Q' to Quit";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-						+ nFontHeight + 200);
-		strDisplay = "left pinkie on 'A' for Shield";
-		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
-						+ nFontHeight + 240);
-
-		strDisplay = "left index finger on 'F' for Guided Missile";
-		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
 						+ nFontHeight + 280);
-
-		strDisplay = "'Numeric-Enter' for Hyperspace";
+		strDisplay = "PLAYER1 press 'I' for Shield, PLAYER2 press 'Z' for shield";
 		grpOff.drawString(strDisplay,
-				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 4
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
 						+ nFontHeight + 320);
+
+		strDisplay = "PLAYER1 press 'F' for SPECIAL WEAPON, PLAYER2 press 'J' for SPECIAL WEAPON";
+		grpOff.drawString(strDisplay,
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+						+ nFontHeight + 360);
+
+		strDisplay = "PLAYER1 press 'G' for SUPER FIRE, PLAYER2 press 'K' for SUPER FIRE";
+		grpOff.drawString(strDisplay,
+				(Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+						+ nFontHeight + 400);
+
+
+        strDisplay = "press 'B' to start single player game, press 'V'for double player";
+        grpOff.drawString(strDisplay,
+                (Game.DIM.width - fmt.stringWidth(strDisplay)) / 2, Game.DIM.height / 5
+                        + nFontHeight + 450);
 	}
 	
 	public GameFrame getFrm() {return this.gmf;}

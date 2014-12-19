@@ -10,11 +10,15 @@ public class specialBullet extends Sprite {
 
     private final double FIRE_POWER = 35.0;
 
+    private Falcon falcon;
+
 
 
     public specialBullet(Falcon fal,int extraDirec){
 
         super();
+
+        setFalcon(fal);
 
 
         //defined the points on a cartesean grid
@@ -49,7 +53,15 @@ public class specialBullet extends Sprite {
         setColor(Color.RED);
     }
 
-    //override the expire method - once an object expires, then remove it from the arrayList. 
+    public Falcon getFalcon() {
+        return falcon;
+    }
+
+    public void setFalcon(Falcon falcon) {
+        this.falcon = falcon;
+    }
+
+    //override the expire method - once an object expires, then remove it from the arrayList.
     public void expire(){
         if (getExpire() == 0) {
             // CommandCenter.movDebris.add(new Explosion(this));

@@ -1,6 +1,5 @@
 package controller;
 
-import sun.audio.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
@@ -22,12 +21,13 @@ public class Game implements Runnable, KeyListener {
 	// FIELDS
 	// ===============================================
 
-	public static final Dimension DIM = new Dimension(1100, 700); //the dimension of the game.
+	public static final Dimension DIM = new Dimension(1300, 800); //the dimension of the game.
 	private GamePanel gmpPanel;
 	public static Random R = new Random();
 	public final static int ANI_DELAY = 45; // milliseconds between screen
 											// updates (animation)
 	private Thread thrAnim;
+    private Thread thrSec;
 	private int nLevel = 1;
 	private int nTick = 0;
 	private ArrayList<Tuple> tupMarkForRemovals;
@@ -37,20 +37,31 @@ public class Game implements Runnable, KeyListener {
 
 	private final int PAUSE = 80, // p key
 			QUIT = 81, // q key
-			LEFT = 37, // rotate left; left arrow
-			RIGHT = 39, // rotate right; right arrow
-			UP = 38, // thrust; up arrow
-			START = 83, // s key
-			FIRE = 32, // space key
-			MUTE = 77, // m-key mute
-            DOWN = 40,
 
+
+			LEFT1 = 37, // rotate left; left arrow
+			RIGHT1 = 39, // rotate right; right arrow
+			UP1 = 38, // thrust; up arrow
+            DOWN1 = 40,
+
+			BEGIN = 66, // B key
+			FIRE1 = 32, // space key
+            FIRE2 = 84 , // T
+			MUTE = 77, // m-key mute
+
+            UP2 = 87, //W
+            DOWN2 = 83, //S
+            LEFT2 = 65, //A
+            RIGHT2 = 68, //D
 	// for possible future use
-	// HYPER = 68, 					// d key
-	 SHIELD = 65, 				// a key arrow
+	         SHIELD1 = 73,  // I key
+             SHIELD2 = 90, //Z KEY
 	// NUM_ENTER = 10, 				// hyp
-	 SPECIAL = 70,// fire special weapon;  F key
-     GROUPBULLET = 71; 					// fire group weapon;  G key
+          SPECIAL1 = 70, //F,
+	      SPECIAL2   = 74,// fire special weapon;  J key
+          GROUPBULLET1 = 71, 					// fire group weapon;  G key
+          GROUPBULLET2 = 75,
+    DOUBLE = 86; //V
 
 	private Clip clpThrust;
 	private Clip clpMusicBackground;
@@ -84,6 +95,7 @@ public class Game implements Runnable, KeyListener {
 						try {
 							Game game = new Game(); // construct itself
 							game.fireUpAnimThread();
+                            game.fireUPSecondThread();
 
 						} catch (Exception e) {
 							e.printStackTrace();
@@ -98,6 +110,13 @@ public class Game implements Runnable, KeyListener {
 			thrAnim.start();
 		}
 	}
+    private void fireUPSecondThread()
+    {
+        if (thrSec == null){
+            thrSec = new Thread(this);
+            thrSec.start();
+        }
+    }
 
 	// implements runnable - must have run method
 	public void run() {
@@ -105,15 +124,18 @@ public class Game implements Runnable, KeyListener {
 		// lower this thread's priority; let the "main" aka 'Event Dispatch'
 		// thread do what it needs to do first
 		thrAnim.setPriority(Thread.MIN_PRIORITY);
+        thrSec.setPriority(Thread.MIN_PRIORITY);
 
 		// and get the current time
 		long lStartTime = System.currentTimeMillis();
 
 		// this thread animates the scene
-		while (Thread.currentThread() == thrAnim) {
+		while (Thread.currentThread() == thrAnim ) {
 			tick();
 			spawnNewShipFloater();
             spawnNewShield();
+            spawnNewUFO();
+            //spawnEnemyBullet();
 			gmpPanel.update(gmpPanel.getGraphics()); // update takes the graphics context we must 
 														// surround the sleep() in a try/catch block
 														// this simply controls delay time between 
@@ -174,48 +196,102 @@ public class Game implements Runnable, KeyListener {
 				//detect collision
 				if (pntFriendCenter.distance(pntFoeCenter) < (nFriendRadiux + nFoeRadiux)) {
 
-					//falcon
-					if ((movFriend instanceof Falcon) ){
-						if (!CommandCenter.getFalcon().getProtected()) {
+					//falcon hits the enemy
+					if ((movFriend instanceof Falcon )) {
+
+                        System.out.println(((Falcon) movFriend).getName());
+                        if (!CommandCenter.getFalcon1().getProtected() && ((Falcon) movFriend).getName().equals("player1")) {
 
                             if (((Falcon) movFriend).getShield() > 0) {
                                 ((Falcon) movFriend).setShield(((Falcon) movFriend).getShield() - 1);
 
                                 initiateDebris((Sprite) movFoe, tupMarkForAdds);
                                 killFoe(movFoe);
-                            }
-                            else
-                            {
+                            } else {
 
-                            tupMarkForRemovals.add(new Tuple(CommandCenter.movFriends, movFriend));
-                            CommandCenter.spawnFalcon(false);
-                            initiateDebris((Sprite) movFriend, tupMarkForAdds);
-                            initiateDebris((Sprite) movFoe, tupMarkForAdds);
-                            killFoe(movFoe);
+                                tupMarkForRemovals.add(new Tuple(CommandCenter.movFriends, movFriend));
+                                if (((Falcon) movFriend).getName().equals("player1")) {
+                                    CommandCenter.spawnFalcon1(false);
+                                }
+
+
+                                initiateDebris((Sprite) movFriend, tupMarkForAdds);
+                                initiateDebris((Sprite) movFoe, tupMarkForAdds);
+                                killFoe(movFoe);
                             }
 
                             //System.out.printf("the shield value is %d\n", ((Falcon) movFriend).getShield());
                             Sound.playSound("shipExplode.WAV");
                         }
+
+                        if (CommandCenter.getFalcon2()!=null)
+                        {
+                        if (!CommandCenter.getFalcon2().getProtected() && ((Falcon) movFriend).getName().equals("player2")) {
+
+                            if (((Falcon) movFriend).getShield() > 0) {
+                                ((Falcon) movFriend).setShield(((Falcon) movFriend).getShield() - 1);
+
+                                initiateDebris((Sprite) movFoe, tupMarkForAdds);
+                                killFoe(movFoe);
+                            } else {
+
+                                tupMarkForRemovals.add(new Tuple(CommandCenter.movFriends, movFriend));
+                                if (((Falcon) movFriend).getName().equals("player2")) {
+                                    CommandCenter.spawnFalcon2(false);
+                                }
+
+                                initiateDebris((Sprite) movFriend, tupMarkForAdds);
+                                initiateDebris((Sprite) movFoe, tupMarkForAdds);
+                                killFoe(movFoe);
+                            }
+
+                            //System.out.printf("the shield value is %d\n", ((Falcon) movFriend).getShield());
+                            Sound.playSound("shipExplode.WAV");
+                        }
+                    }
 					}
-					//not the falcon
+					//cruise hits the enemy
                     else if (movFriend instanceof Cruise)
                     {
                         killFoe(movFoe);
-                        CommandCenter.setScore(CommandCenter.getScore()+10);
+                        if (((Cruise) movFriend).getFalcon().getName().equals("player1")) {
+                            CommandCenter.setScore1(CommandCenter.getScore() + 10);
+                        }
+                        if (((Cruise) movFriend).getFalcon().getName().equals("player2")) {
+                            CommandCenter.setScore2(CommandCenter.getScore2() + 10);
+                        }
                         CommandCenter.movDebris.add(new Explosion(movFoe,10,10));
                         initiateDebris((Sprite) movFoe,tupMarkForAdds);
                         Sound.playSound("explode.wav");
                     }
-					else {
+					else if (movFriend instanceof Bullet ){//the bullet hits the enemy
 						tupMarkForRemovals.add(new Tuple(CommandCenter.movFriends, movFriend));
 						killFoe(movFoe);
-                        CommandCenter.setScore(CommandCenter.getScore()+10);
+                        if (((Bullet) movFriend).getFalcon().getName().equals("player1")){
+                            CommandCenter.setScore1(CommandCenter.getScore() + 10);
+                        }
+                        if (((Bullet) movFriend).getFalcon().getName().equals("player2")) {
+                            CommandCenter.setScore2(CommandCenter.getScore2() + 10);
+                        }
                         CommandCenter.movDebris.add(new Explosion(movFoe,10,10));
                         initiateDebris((Sprite) movFoe,tupMarkForAdds);
                         Sound.playSound("explode.wav");
                         //add the score
-					}//end else 
+					}//end else
+                    else if (movFriend instanceof specialBullet ){//the bullet hits the enemy
+                        tupMarkForRemovals.add(new Tuple(CommandCenter.movFriends, movFriend));
+                        killFoe(movFoe);
+                        if (((specialBullet) movFriend).getFalcon().getName().equals("player1")){
+                            CommandCenter.setScore1(CommandCenter.getScore() + 10);
+                        }
+                        if (((specialBullet) movFriend).getFalcon().getName().equals("player2")) {
+                            CommandCenter.setScore2(CommandCenter.getScore2() + 10);
+                        }
+                        CommandCenter.movDebris.add(new Explosion(movFoe,10,10));
+                        initiateDebris((Sprite) movFoe,tupMarkForAdds);
+                        Sound.playSound("explode.wav");
+                        //add the score
+                    }//end else
 
 					//explode/remove foe
 
@@ -227,9 +303,9 @@ public class Game implements Runnable, KeyListener {
 
 
 		//check for collisions between falcon and floaters
-		if (CommandCenter.getFalcon() != null){
-			Point pntFalCenter = CommandCenter.getFalcon().getCenter();
-			int nFalRadiux = CommandCenter.getFalcon().getRadius();
+		if (CommandCenter.getFalcon1() != null){
+			Point pntFalCenter = CommandCenter.getFalcon1().getCenter();
+			int nFalRadiux = CommandCenter.getFalcon1().getRadius();
 			Point pntFloaterCenter;
 			int nFloaterRadiux;
 			
@@ -242,20 +318,42 @@ public class Game implements Runnable, KeyListener {
 	
 					
 					tupMarkForRemovals.add(new Tuple(CommandCenter.movFloaters, movFloater));
-                    CommandCenter.setNumFalcons(CommandCenter.getNumFalcons() + 1);
+                    CommandCenter.setNumFalcons1(CommandCenter.getNumFalcons1() + 1);
 					Sound.playSound("pacman_eatghost.wav");
 	
 				}//end if 
 			}//end inner for
 		}//end if not null
 
+        if (CommandCenter.getFalcon2() != null){
+            Point pntFalCenter = CommandCenter.getFalcon2().getCenter();
+            int nFalRadiux = CommandCenter.getFalcon2().getRadius();
+            Point pntFloaterCenter;
+            int nFloaterRadiux;
+
+            for (Movable movFloater : CommandCenter.movFloaters) {
+                pntFloaterCenter = movFloater.getCenter();
+                nFloaterRadiux = movFloater.getRadius();
+
+                //detect collision
+                if (pntFalCenter.distance(pntFloaterCenter) < (nFalRadiux + nFloaterRadiux)) {
+
+
+                    tupMarkForRemovals.add(new Tuple(CommandCenter.movFloaters, movFloater));
+                    CommandCenter.setNumFalcons2(CommandCenter.getNumFalcons2() + 1);
+                    Sound.playSound("pacman_eatghost.wav");
+
+                }//end if
+            }//end inner for
+        }//end if not null
 
 
 
 
-        if (CommandCenter.getFalcon() != null){
-            Point pntFalCenter = CommandCenter.getFalcon().getCenter();
-            int nFalRadiux = CommandCenter.getFalcon().getRadius();
+
+        if (CommandCenter.getFalcon1() != null){
+            Point pntFalCenter = CommandCenter.getFalcon1().getCenter();
+            int nFalRadiux = CommandCenter.getFalcon1().getRadius();
             Point pntShieldCenter;
             int nShieldRadiux;
 
@@ -268,7 +366,30 @@ public class Game implements Runnable, KeyListener {
 
 
                     tupMarkForRemovals.add(new Tuple(CommandCenter.movShield, movShield));
-                    CommandCenter.getFalcon().setShield(3);
+                    CommandCenter.getFalcon1().setShield(3);
+                    Sound.playSound("shieldup.wav");
+
+                }//end if
+            }//end inner for
+        }//end if not null
+
+
+        if (CommandCenter.getFalcon2() != null){
+            Point pntFalCenter = CommandCenter.getFalcon2().getCenter();
+            int nFalRadiux = CommandCenter.getFalcon2().getRadius();
+            Point pntShieldCenter;
+            int nShieldRadiux;
+
+            for (Movable movShield : CommandCenter.movShield) {
+                pntShieldCenter = movShield.getCenter();
+                nShieldRadiux = movShield.getRadius();
+
+                //detect collision
+                if (pntFalCenter.distance(pntShieldCenter) < (nFalRadiux + nShieldRadiux)) {
+
+
+                    tupMarkForRemovals.add(new Tuple(CommandCenter.movShield, movShield));
+                    CommandCenter.getFalcon2().setShield(3);
                     Sound.playSound("shieldup.wav");
 
                 }//end if
@@ -367,25 +488,32 @@ public class Game implements Runnable, KeyListener {
 	}
 
 	private void spawnNewShipFloater() {
-		//make the appearance of power-up dependent upon ticks and levels
-		//the higher the level the more frequent the appearance
+
 		if (nTick % (SPAWN_NEW_SHIP_FLOATER - nLevel * 400) == 0) {
 			CommandCenter.movFloaters.add(new NewShipFloater());
 		}
 	}
 
+
+
     private void spawnNewShield() {
-        //make the appearance of power-up dependent upon ticks and levels
-        //the higher the level the more frequent the appearance
+
         if (nTick % (SPAWN_NEW_SHIP_FLOATER - nLevel * 500) == 0) {
             CommandCenter.movShield.add(new newShield());
         }
     }
 
+    private void spawnNewUFO() {
+
+        if (nTick % (SPAWN_NEW_SHIP_FLOATER - nLevel * 600) == 0) {
+            CommandCenter.movFoes.add(new UFO());
+        }
+    }
+
 	// Called when user presses 's'
-	private void startGame() {
+	private void startGame(int number) {
 		CommandCenter.clearAll();
-		CommandCenter.initGame();
+		CommandCenter.initGame(number);
 		CommandCenter.setLevel(0);
 		CommandCenter.setPlaying(true);
 		CommandCenter.setPaused(false);
@@ -421,8 +549,8 @@ public class Game implements Runnable, KeyListener {
 	private void checkNewLevel(){
 		
 		if (isLevelClear() ){
-			if (CommandCenter.getFalcon() !=null)
-				CommandCenter.getFalcon().setProtected(true);
+			if (CommandCenter.getFalcon1() !=null)
+				CommandCenter.getFalcon1().setProtected(true);
 			
 			spawnAsteroids(CommandCenter.getLevel() + 2);
 			CommandCenter.setLevel(CommandCenter.getLevel() + 1);
@@ -446,14 +574,18 @@ public class Game implements Runnable, KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		Falcon fal = CommandCenter.getFalcon();
+		Falcon fal1 = CommandCenter.getFalcon1();
+        Falcon fal2 = CommandCenter.getFalcon2();
 		int nKey = e.getKeyCode();
 		// System.out.println(nKey);
 
-		if (nKey == START && !CommandCenter.isPlaying())
-			startGame();
+		if (nKey == BEGIN && !CommandCenter.isPlaying())
+			startGame(1);
 
-		if (fal != null) switch (nKey) {
+        if (nKey == DOUBLE && !CommandCenter.isPlaying())
+            startGame(2);
+
+		if (fal1 != null) switch (nKey) {
             case PAUSE:
                 CommandCenter.setPaused(!CommandCenter.isPaused());
                 if (CommandCenter.isPaused())
@@ -464,32 +596,32 @@ public class Game implements Runnable, KeyListener {
             case QUIT:
                 System.exit(0);
                 break;
-            case UP:
-                fal.stopRotating();
-                fal.rotateUp();
-                fal.thrustOn();
+            case UP1:
+                fal1.stopRotating();
+                fal1.rotateUp();
+                fal1.thrustOn();
                 if (!CommandCenter.isPaused())
                     clpThrust.loop(Clip.LOOP_CONTINUOUSLY);
                 break;
-            case LEFT:
-                fal.stopRotating();
-                fal.rotateLeft();
-                fal.thrustOn();
+            case LEFT1:
+                fal1.stopRotating();
+                fal1.rotateLeft();
+                fal1.thrustOn();
                 break;
-            case RIGHT:
-                fal.stopRotating();
-                fal.rotateRight();
-                fal.thrustOn();
+            case RIGHT1:
+                fal1.stopRotating();
+                fal1.rotateRight();
+                fal1.thrustOn();
                 break;
-            case DOWN:
-                fal.stopRotating();
-                fal.rotateDown();
-                fal.thrustOn();
+            case DOWN1:
+                fal1.stopRotating();
+                fal1.rotateDown();
+                fal1.thrustOn();
                 break;
             // possible future use
             // case KILL:
-            case SHIELD:
-                fal.setShield(3);
+            case SHIELD1:
+                fal1.setShield(3);
                 Sound.playSound("shieldup.wav");
                 //System.out.printf("the shield value is set to %d\n", fal.getShield());
                 break;
@@ -498,52 +630,100 @@ public class Game implements Runnable, KeyListener {
             default:
                 break;
         }
+
+        if (fal2 != null) switch (nKey) {
+            case PAUSE:
+                CommandCenter.setPaused(!CommandCenter.isPaused());
+                if (CommandCenter.isPaused())
+                    stopLoopingSounds(clpMusicBackground, clpThrust);
+                else
+                    clpMusicBackground.loop(Clip.LOOP_CONTINUOUSLY);
+                break;
+            case QUIT:
+                System.exit(0);
+                break;
+            case UP2:
+                fal2.stopRotating();
+                fal2.rotateUp();
+                fal2.thrustOn();
+                if (!CommandCenter.isPaused())
+                    clpThrust.loop(Clip.LOOP_CONTINUOUSLY);
+                break;
+            case LEFT2:
+                fal2.stopRotating();
+                fal2.rotateLeft();
+                fal2.thrustOn();
+                break;
+            case RIGHT2:
+                fal2.stopRotating();
+                fal2.rotateRight();
+                fal2.thrustOn();
+                break;
+            case DOWN2:
+                fal2.stopRotating();
+                fal2.rotateDown();
+                fal2.thrustOn();
+                break;
+            // possible future use
+            // case KILL:
+            case SHIELD2:
+                fal2.setShield(3);
+                Sound.playSound("shieldup.wav");
+                //System.out.printf("the shield value is set to %d\n", fal.getShield());
+                break;
+            // case NUM_ENTER:
+
+            default:
+                break;
+        }
+
 	}
 
 	@Override
 	public void keyReleased(KeyEvent e) {
-		Falcon fal = CommandCenter.getFalcon();
+		Falcon fal1 = CommandCenter.getFalcon1();
+        Falcon fal2 = CommandCenter.getFalcon2();
 		int nKey = e.getKeyCode();
 		 System.out.println(nKey);
 
-		if (fal != null) {
+		if (fal1 != null) {
 			switch (nKey) {
-			case FIRE:
-				CommandCenter.movFriends.add(new Bullet(fal));
+			case FIRE1:
+				CommandCenter.movFriends.add(new Bullet(fal1));
 				Sound.playSound("laser.wav");
 				break;
-            case GROUPBULLET:
+            case GROUPBULLET1:
                 for (int i=0;i<23;i++)
                 {
-                    CommandCenter.movFriends.add(new specialBullet(fal,i*15));
+                    CommandCenter.movFriends.add(new specialBullet(fal1,i*15));
                 }
                 Sound.playSound("laser.wav");
                 break;
 
 			//special is a special weapon, current it just fires the cruise missile. 
-			case SPECIAL:
-				CommandCenter.movFriends.add(new Cruise(fal));
+			case SPECIAL1:
+				CommandCenter.movFriends.add(new Cruise(fal1));
 				//Sound.playSound("laser.wav");
 				break;
 				
-			case LEFT:
-				fal.stopRotating();
-                fal.thrustOff();
+			case LEFT1:
+				fal1.stopRotating();
+                fal1.thrustOff();
                 clpThrust.stop();
 				break;
-			case RIGHT:
-				fal.stopRotating();
-                fal.thrustOff();
+			case RIGHT1:
+				fal1.stopRotating();
+                fal1.thrustOff();
                 clpThrust.stop();
 				break;
-            case DOWN:
-                fal.stopRotating();
-                fal.thrustOff();
+            case DOWN1:
+                fal1.stopRotating();
+                fal1.thrustOff();
                 clpThrust.stop();
                 break;
-			case UP:
-                fal.stopRotating();
-                fal.thrustOff();
+			case UP1:
+                fal1.stopRotating();
+                fal1.thrustOff();
                 clpThrust.stop();
 				break;
 				
@@ -563,6 +743,65 @@ public class Game implements Runnable, KeyListener {
 				break;
 			}
 		}
+
+        if (fal2 != null) {
+            switch (nKey) {
+                case FIRE2:
+                    CommandCenter.movFriends.add(new Bullet(fal2));
+                    Sound.playSound("laser.wav");
+                    break;
+                case GROUPBULLET2:
+                    for (int i=0;i<23;i++)
+                    {
+                        CommandCenter.movFriends.add(new specialBullet(fal2,i*15));
+                    }
+                    Sound.playSound("laser.wav");
+                    break;
+
+                //special is a special weapon, current it just fires the cruise missile.
+                case SPECIAL2:
+                    CommandCenter.movFriends.add(new Cruise(fal2));
+                    //Sound.playSound("laser.wav");
+                    break;
+
+                case LEFT2:
+                    fal2.stopRotating();
+                    fal2.thrustOff();
+                    clpThrust.stop();
+                    break;
+                case RIGHT2:
+                    fal2.stopRotating();
+                    fal2.thrustOff();
+                    clpThrust.stop();
+                    break;
+                case DOWN2:
+                    fal2.stopRotating();
+                    fal2.thrustOff();
+                    clpThrust.stop();
+                    break;
+                case UP2:
+                    fal2.stopRotating();
+                    fal2.thrustOff();
+                    clpThrust.stop();
+                    break;
+
+                case MUTE:
+                    if (!bMuted){
+                        stopLoopingSounds(clpMusicBackground);
+                        bMuted = !bMuted;
+                    }
+                    else {
+                        clpMusicBackground.loop(Clip.LOOP_CONTINUOUSLY);
+                        bMuted = !bMuted;
+                    }
+                    break;
+
+
+                default:
+                    break;
+            }
+        }
+
 	}
 
 	@Override

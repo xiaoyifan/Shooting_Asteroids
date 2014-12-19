@@ -10,12 +10,14 @@ public class Bullet extends Sprite {
 
 	  private final double FIRE_POWER = 35.0;
 
+        private Falcon falcon;
+
 	 
 	
 public Bullet(Falcon fal){
 		
 		super();
-		
+		setFalcon(fal);
 		
 		//defined the points on a cartesean grid
 		ArrayList<Point> pntCs = new ArrayList<Point>();
@@ -48,7 +50,15 @@ public Bullet(Falcon fal){
 
 	}
 
-    //override the expire method - once an object expires, then remove it from the arrayList. 
+    public Falcon getFalcon() {
+        return falcon;
+    }
+
+    public void setFalcon(Falcon falcon) {
+        this.falcon = falcon;
+    }
+
+    //override the expire method - once an object expires, then remove it from the arrayList.
 	public void expire(){
  		if (getExpire() == 0) {
            // CommandCenter.movDebris.add(new Explosion(this));
@@ -65,7 +75,7 @@ public Bullet(Falcon fal){
         //fill this polygon (with whatever color it has)
         g.fillPolygon(getXcoords(), getYcoords(), dDegrees.length);
         //now draw a white border
-        g.setColor(Color.WHITE);
+        g.setColor(Color.orange);
         g.drawPolygon(getXcoords(), getYcoords(), dDegrees.length);
     }
 

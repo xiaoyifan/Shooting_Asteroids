@@ -23,6 +23,7 @@ public abstract class Sprite implements Movable {
 	private int nExpiry; //natural mortality (short-living objects)
 	//the color of this sprite
 	private Color col;
+    private Paint paint;
 
 	//radial coordinates
 	//this game uses radial coordinates to render sprites
@@ -107,6 +108,11 @@ public abstract class Sprite implements Movable {
 		this.col = col;
 
 	}
+
+    public void setPaint(Paint paint)
+    {
+        this.paint = paint;
+    }
 
 	public int points() {
 		//default is zero
@@ -298,6 +304,7 @@ public abstract class Sprite implements Movable {
         g.drawPolygon(getXcoords(), getYcoords(), dDegrees.length);
         Graphics2D g2 = (Graphics2D)g;
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setPaint(paint);
     }
     
 

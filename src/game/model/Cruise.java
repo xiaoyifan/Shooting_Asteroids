@@ -18,9 +18,14 @@ public class Cruise extends Sprite {
 		public double[] dLengthsAlts;
 		public double[] dDegreesAlts;
 
+
+    private Falcon falcon;
+
 	public Cruise(Falcon fal) {
 
 		super();
+
+        setFalcon(fal);
 
 		//defined the points on a cartesean grid
 		ArrayList<Point> pntCs = new ArrayList<Point>();
@@ -71,8 +76,15 @@ public class Cruise extends Sprite {
 
 	}
 
-	
-	//assign for alt imag
+    public Falcon getFalcon() {
+        return falcon;
+    }
+
+    public void setFalcon(Falcon falcon) {
+        this.falcon = falcon;
+    }
+
+    //assign for alt imag
 	protected void assignPolorPointsAlts(ArrayList<Point> pntCs) {
 		 dDegreesAlts = convertToPolarDegs(pntCs);
 		 dLengthsAlts = convertToPolarLens(pntCs);

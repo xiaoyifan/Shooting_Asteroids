@@ -28,7 +28,7 @@ public class Falcon extends Sprite {
     private boolean bTurningDown = false;
     private boolean bTurningUp =false;
 
-
+    private String name = "";
 	
 	private int nShield;
 			
@@ -40,12 +40,20 @@ public class Falcon extends Sprite {
 
 	private Point[] pntFlames = new Point[FLAME.length];
 
-	
-	// ==============================================================
+	private Color color;
+
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+    // ==============================================================
 	// CONSTRUCTOR 
 	// ==============================================================
 	
-	public Falcon() {
+	public Falcon(String name, Color color) {
 		super();
 
 		ArrayList<Point> pntCs = new ArrayList<Point>();
@@ -56,6 +64,7 @@ public class Falcon extends Sprite {
 		//right points
 		pntCs.add(new Point(10, 35));
 
+        setName(name);
 
 		pntCs.add(new Point(10, -5));
         pntCs.add(new Point(5, -5));
@@ -89,10 +98,9 @@ public class Falcon extends Sprite {
 
 		assignPolarPoints(pntCs);
 
-		setColor(Color.white);
 		
 		//put falcon in the middle.
-		setCenter(new Point(Game.DIM.width / 2, Game.DIM.height / 2));
+		setCenter(new Point(Game.R.nextInt(Game.DIM.width), Game.R.nextInt(Game.DIM.height)));
 		
 		//with random orientation
 		setOrientation(Game.R.nextInt(360));
@@ -103,7 +111,7 @@ public class Falcon extends Sprite {
 		//these are falcon specific
 		setProtected(true);
 		setFadeValue(0);
-        setColor(Color.yellow);
+        setColor(color);
 	}
 	
 	
@@ -111,8 +119,19 @@ public class Falcon extends Sprite {
 	// METHODS 
 	// ==============================================================
 
-	public void move() {
-		super.move();
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void move() {
+
+
+        super.move();
 		if (bThrusting) {
 			bFlame = true;
 			double dAdjustX = Math.cos(Math.toRadians(getOrientation()))
@@ -301,7 +320,7 @@ public class Falcon extends Sprite {
 		//does the fading at the beginning or after hyperspace
 		Color colShip;
 		if (getFadeValue() == 255) {
-			colShip = Color.yellow;
+			colShip = color;
 		} else {
 			colShip = new Color(adjustColor(getFadeValue(), 200), adjustColor(
 					getFadeValue(), 175), getFadeValue());
@@ -318,6 +337,7 @@ public class Falcon extends Sprite {
 			gg.drawOval(getCenter().x - getRadius(),
 					getCenter().y - getRadius(), getRadius() * 2,
 					getRadius() * 2);
+
 
             gg.setStroke(new BasicStroke(2.0f));
 		} //end if shield
